@@ -9,6 +9,26 @@ Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình 
 
 ## Giới thiệu
 Các hệ thống web hiện đại thường đối diện với tấn công lớp ứng dụng, nơi kẻ tấn công khai thác trực tiếp các điểm yếu trong logic xử lý dữ liệu.  
+| Loại tấn công              | Mục tiêu chính                         | Hậu quả tiềm ẩn                  |
+|-----------------------------|----------------------------------------|----------------------------------|
+| SQL Injection (SQLi)        | Cơ sở dữ liệu                          | Rò rỉ hoặc thay đổi dữ liệu      |
+| Cross-Site Scripting (XSS)  | Trình duyệt người dùng                 | Chiếm quyền điều khiển, đánh cắp cookie |
+| CSRF                        | Phiên đăng nhập hợp lệ                 | Thực hiện hành động trái phép    |
+| Command Injection / Path Traversal | Hệ điều hành, hệ thống file | Thực thi lệnh, truy cập file nhạy cảm |
+| Brute force / Credential stuffing | Tài khoản người dùng           | Chiếm quyền truy cập, khóa tài khoản |
+
+### Tác động
+- **Rò rỉ dữ liệu nhạy cảm:** thông tin người dùng, mật khẩu, dữ liệu tài chính.  
+- **Chiếm quyền điều khiển hệ thống:** thực thi lệnh trái phép, leo thang đặc quyền.  
+- **Gián đoạn dịch vụ:** làm ứng dụng không thể hoạt động bình thường.  
+- **Ảnh hưởng uy tín:** mất niềm tin của khách hàng và đối tác.
+
+### Vai trò của CRSV4
+CRSV4 được thiết kế để:
+- Ngăn chặn các tấn công lớp ứng dụng ngay tại tầng web server (Apache).  
+- Phân tích request theo nhiều lớp (pipeline) để phát hiện cả dấu hiệu rõ ràng lẫn bất thường tinh vi.  
+- Cung cấp cơ chế **tích điểm (scoring)** và **ngưỡng (thresholds)** để ra quyết định linh hoạt: cảnh báo, thử thách, hoặc chặn.  
+- Giúp quản trị viên vừa bảo vệ hệ thống, vừa giảm thiểu false positive, đảm bảo trải nghiệm người dùng hợp lệ.
 
 **Mục tiêu của CRSV4:**
 - Cung cấp lớp phòng vệ theo thời gian thực, tích hợp chặt với Apache.
@@ -26,7 +46,7 @@ Các hệ thống web hiện đại thường đối diện với tấn công l�
 ## Kiến trúc hệ thống CRSV4
 
 ### Tổng quan kiến trúc
-CRSV4 được thiết kế theo mô hình pipeline nhiều lớp:
+CRSV4 được thiết kế theo mô hình pipeline(Chuỗi bước liên tiếp) nhiều lớp:
 
 - **Lớp tiền xử lý (Preprocessing):**
   - Chuẩn hoá request/response (URI normalization, decode/encode an toàn).
@@ -142,7 +162,7 @@ CRSV4 sẽ phân tích và cộng điểm theo từng vi phạm, sau đó quyế
 
 ## 1. Request hợp lệ
 ```bash
-curl -i -G --data-urlencode "cmd=echo EXOLOIT_OK" http://192.168.23.130/vulnerable.php
+curl -i -get --data-urlencode "cmd=echo EXOLOIT_OK" http://192.168.23.130/vulnerable.php
 ```
 
 **Phân tích CRSV4:**
@@ -162,7 +182,7 @@ EXOLOIT_OK
 
 ## 2. Request chứa chuỗi nghi ngờ
 ```bash
-curl -i -G --data-urlencode "cmd=ls; whoami" http://192.168.23.130/vulnerable.php
+curl -i -get --data-urlencode "cmd=ls; whoami" http://192.168.23.130/vulnerable.php
 ```
 
 **Phân tích CRSV4:**
