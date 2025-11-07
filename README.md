@@ -1,4 +1,4 @@
-# Bài báo khoa học: Kiến trúc, cơ chế chặn và triển khai CRSV4 bảo vệ hệ thống web trên Apache
+# Bài báo khoa học: Kiến trúc, cơ chế chặn và triển khai CRSV4 bảo vệ hệ thống web
 
 ## Tóm tắt
 CRSV4 là một hệ thống phòng vệ ứng dụng web (Web Application Firewall – WAF) giả định, được thiết kế để bảo vệ máy chủ khỏi các mối đe doạ lớp ứng dụng như SQL Injection, XSS, CSRF, brute force và thăm dò lỗ hổng. Công cụ này hoạt động theo cơ chế đa lớp, kết hợp phân tích chữ ký, phát hiện bất thường, kiểm soát hành vi và cơ chế tích điểm để đưa ra quyết định chặn hoặc cho phép request.  
@@ -20,8 +20,13 @@ Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình 
  
 3.Modsecurity là gì ?
 - ModSecurity là Tường lửa ứng dụng web (WAF) mã nguồn mở. Nó có thể được cài đặt dưới dạng một mô-đun bên trong máy chủ web Apache, Nginx hoặc IIS.
+4.Sự khác biệt giữa CRS và Modsecurity là gì ?
+- ModSecurity là một công cụ tường lửa có thể kiểm tra lưu lượng truy cập trên máy chủ của bạn. Nó ghi lại và chặn các yêu cầu. Tuy nhiên, công cụ này sẽ không làm được gì nếu không có một chính sách nhất định.
+- CRS cung cấp một chính sách cho phép kiểm tra các yêu cầu đến ứng dụng web của bạn để phát hiện các cuộc tấn công khác nhau và chặn lưu lượng truy cập độc hại.
 
-4.Các hệ thống web hiện đại thường đối diện với tấn công lớp ứng dụng, nơi kẻ tấn công khai thác trực tiếp các điểm yếu trong logic xử lý dữ liệu.  
+5.Các hệ thống web hiện đại thường đối diện với tấn công lớp ứng dụng, nơi kẻ tấn công khai thác trực tiếp các điểm yếu trong logic xử lý dữ liệu.
+
+  
 | Loại tấn công              | Mục tiêu chính                         | Hậu quả tiềm ẩn                  |
 |-----------------------------|----------------------------------------|----------------------------------|
 | SQL Injection (SQLi)        | Cơ sở dữ liệu                          | Rò rỉ hoặc thay đổi dữ liệu      |
@@ -93,7 +98,7 @@ CRSV4 được thiết kế theo mô hình pipeline(Chuỗi bước liên tiếp
 5. Phản hồi đến client và/hoặc upstream app.
 
 ### Ý nghĩa thực tiễn
-- **Tính mô-đun:** Cho phép quản trị viên bật/tắt từng lớp tuỳ theo nhu cầu.
+- **Dễ dàng kiểm soát:** Cho phép quản trị viên bật/tắt từng lớp tuỳ theo nhu cầu.
 - **Khả năng mở rộng:** Có thể bổ sung thêm lớp mới (ví dụ: machine learning) mà không ảnh hưởng pipeline hiện tại.
 - **Giảm false positive:** Shadow mode và anomaly scoring giúp tinh chỉnh ngưỡng trước khi áp dụng chặn thực tế.
 - **Khả năng tích hợp:** Log và sự kiện có thể đưa vào SIEM/ELK để phân tích tập trung.
@@ -361,4 +366,91 @@ Trong log sẽ có (Request gốc , Rule nào match ,  Điểm anomaly cộng th
    ![Log ghi lại phần 403 forbiddent](images/log-403-1.png)    
    ![Mô tả ảnh](images/log-403-2.png)
    ![Mô tả ảnh](images/log-403-3.png)
+
+
+   
 ---
+
+
+## Nâng cao bảo mật hệ thống web bằng cách tự thêm lớp bảo vệ tùy chỉnh với ModSecurity CRS
+> `cmd=` là một **cửa hậu nguy hiểm** nếu bị lộ, vì nó cho phép bất kỳ ai thực thi lệnh hệ điều hành trực tiếp từ trình duyệt hoặc curl. 
+> Nếu không có kiểm soát đầu vào và không có lớp bảo vệ như ModSecurity, attacker có thể đọc file, chiếm quyền, mở reverse shell, hoặc phá hủy toàn bộ hệ thống chỉ bằng một dòng lệnh.
+
+
+## **Giải pháp: Tự thêm rule nâng cao vào CRS**
+
+### Tạo file rule tùy chỉnh:
+
+```bash
+sudo nano /etc/modsecurity/coreruleset/rules/REQUEST-999-CRITICAL-CMD-BLOCK.conf
+```
+
+###  Nội dung rule tổng hợp:
+
+```apache
+# 1. Chặn các lệnh hệ điều hành cơ bản qua tham số cmd
+
+SecRule ARGS:cmd "@rx (?i)\b(echo|ls|cat|id|pwd|whoami|uname|uptime|rm|touch|cp|mv|chmod|chown|curl|wget|ping|nslookup|dig|netstat|ifconfig|ip|ps|top|kill|env|export|find|grep|awk|sed|tar|zip|unzip|docker|systemctl|service|shutdown|reboot|mount|umount|dd|mkfs|useradd|passwd|su|ssh|scp|ftp|telnet)\b" \
+    "id:9999100,\
+    phase:2,\
+    deny,\
+    status:403,\
+    msg:'Blocked suspicious command in cmd parameter',\
+    severity:CRITICAL,\
+    log"
+# 2. Chặn kỹ thuật shell chaining và redirection
+
+SecRule ARGS:cmd "@rx (;|\||&&|`|\$\(.*\)|>|<|>>|2>|2>>|&>|&>>)" \
+    "id:9999101,\
+    phase:2,\
+    deny,\
+    status:403,\
+    msg:'Blocked dangerous shell characters in cmd parameter',\
+    severity:CRITICAL,\
+    log"
+# 3. Chặn reverse shell và encode bypass
+
+SecRule ARGS "@rx (?i)\b(echo|ls|cat|id|pwd|whoami|uname|uptime|rm|touch|cp|mv|chmod|chown|curl|wget|ping|nslookup|dig|netstat|ifconfig|ip|ps|top|kill|env|export|find|grep|awk|sed|tar|zip|unzip|docker|systemctl|service|shutdown|reboot|mount|umount|dd|mkfs|useradd|passwd|su|ssh|scp|ftp|telnet)\b" \
+    "id:9999102,\
+    phase:2,\
+    deny,\
+    status:403,\
+    msg:'Blocked suspicious command in any parameter',\
+    severity:CRITICAL,\
+    log"
+# 4. Chặn truy cập file hệ thống nhạy cảm
+
+SecRule ARGS|REQUEST_URI|QUERY_STRING "@rx (?i)\b(/etc/passwd|/etc/shadow|/root/|/home/|/var/log|/proc/self|/dev/null|/dev/tty|/tmp/|/bin/|/sbin/)\b" \
+    "id:9999104,\
+    phase:2,\
+    deny,\
+    status:403,\
+    msg:'Blocked access to sensitive system paths',\
+    severity:CRITICAL,\
+    log"
+
+### Cho hệ thống cực yếu có thể khai thác trực tiếp 
+SecRule ARGS|REQUEST_URI|QUERY_STRING "@rx (?i)\b(cat|ls|rm|touch|cp|mv|chmod|chown|find|grep|awk|sed|strings|nc|bash|curl|wget|useradd|chmod|4444|1337|sudo|su|systemctl|reboot|shutdown|mkfs|dd|mount|umount|base64|eval|exec|decode|>&0|0<&1)\b|(;|\||&&|`|\$\(.*\))" \
+    "id:9999999,\
+    phase:2,\
+    deny,\
+    status:403,\
+    msg:'Blocked critical command injection or privilege escalation attempt',\
+    severity:CRITICAL,\
+    log"
+
+```
+### Restart apache
+```bash
+sudo systemctl restart apache2
+```
+## Kiểm thử từ máy Kali
+- Gửi lệnh `cmd=` đến máy chủ ubuntu:
+  ```bash
+  curl -i --get --data-urlencode "cmd=echo OK" http://192.168.29.130/vulnerable.php
+  ```
+- Kết quả :
+  ![LOG](images/403-1.png)
+-Log của máy chủ ubuntu hiện:
+ ![LOG](images/log-403-4.png)
+ ![LOG](images/log-403-5.png)
