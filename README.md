@@ -427,23 +427,12 @@ SecRule ARGS|REQUEST_URI|QUERY_STRING "@rx (?i)\b(/etc/passwd|/etc/shadow|/root/
     msg:'Blocked access to sensitive system paths',\
     severity:CRITICAL,\
     log"
-
-### Cho hệ thống cực yếu có thể khai thác trực tiếp 
-SecRule ARGS|REQUEST_URI|QUERY_STRING "@rx (?i)\b(cat|ls|rm|touch|cp|mv|chmod|chown|find|grep|awk|sed|strings|nc|bash|curl|wget|useradd|chmod|4444|1337|sudo|su|systemctl|reboot|shutdown|mkfs|dd|mount|umount|base64|eval|exec|decode|>&0|0<&1)\b|(;|\||&&|`|\$\(.*\))" \
-    "id:9999999,\
-    phase:2,\
-    deny,\
-    status:403,\
-    msg:'Blocked critical command injection or privilege escalation attempt',\
-    severity:CRITICAL,\
-    log"
-
 ```
-### Restart apache
+### Restart apache:
 ```bash
 sudo systemctl restart apache2
 ```
-### Kiểm thử từ máy Kali
+### Kiểm thử từ máy Kali:
 - Gửi lệnh `cmd=` đến máy chủ ubuntu:
   ```bash
   curl -i --get --data-urlencode "cmd=echo OK" http://192.168.29.130/vulnerable.php
@@ -457,10 +446,11 @@ sudo systemctl restart apache2
  ![LOG](images/01.png)
  ![LOG](images/02.png)
 
-##3. Kết luận:
+## 3. Kết luận:
 -Sau khi hoàn tất các bước trên, hệ thống Apache dù cực yếu vẫn được bảo vệ bởi ModSecurity CRS nâng cao. Dù attacker gửi lệnh qua bất kỳ tham số nào, dùng shell chaining, reverse shell hay truy cập file hệ thống, tất cả đều bị chặn ở tầng request với mã 403.
 -Việc thêm file  giúp bạn chặn triệt để các lệnh nguy hiểm qua  và toàn bộ request. Đây là lớp bảo vệ cuối cùng trong hệ thống, đảm bảo rằng dù attacker gửi lệnh gì, hệ thống vẫn chặn đứng ngay từ tầng request.
 
+---
 ## Đánh giá và phân tích CRSV4:
 - Chặn hiệu quả SQLi, XSS, CSRF, brute force, command injection.
 - 	Cơ chế tích điểm và ngưỡng giúp giảm false positive.
@@ -470,7 +460,7 @@ sudo systemctl restart apache2
 
 ---
 
-##  Kết luận
+##  Tổng Kết
 
 - CRSV4 là giải pháp WAF hiệu quả, phù hợp cả môi trường thử nghiệm và triển khai thực tế.  
 - Kiến trúc đa lớp và cơ chế tích điểm giúp bảo vệ toàn diện hệ thống web khỏi các mối đe doạ lớp ứng dụng.  
