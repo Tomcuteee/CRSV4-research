@@ -449,8 +449,10 @@ sudo systemctl restart apache2
   ```bash
   curl -i --get --data-urlencode "cmd=echo OK" http://192.168.29.130/vulnerable.php
   ```
-- Kết quả :
-  ![LOG](images/403-1.png)
+- Kết quả:
+  ![LOG](images/001.png)
+
+  
 -Log của máy chủ ubuntu hiện:
- ![LOG](images/log-403-4.png)
- ![LOG](images/log-403-5.png)
+ ![LOG](images/01.png)
+ ![LOG](images/02.png)
