@@ -344,7 +344,7 @@ sudo tail -f /var/log/apache2/modsec_audit.log
 Trong log sẽ có (Request gốc , Rule nào match ,  Điểm anomaly cộng thêm  , Hành động (block/challenge/log) )
   
    ![Log ghi lại phần 200 ok](images/log-200-ok.png)
-   ![Log ghi lại phần 403 forbiddent](images/LOG-403-1.png)    
+   ![Log ghi lại phần 403 forbiddent](images/log-403-1.png)    
    ![Mô tả ảnh](images/log-403-2.png)
    ![Mô tả ảnh](images/log-403-3.png)
 ---
