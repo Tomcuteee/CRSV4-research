@@ -59,6 +59,12 @@ CRSV4 được thiết kế theo mô hình pipeline nhiều lớp:
 4. Ghi log giàu ngữ cảnh, gắn ID sự kiện, hỗ trợ truy vết.
 5. Phản hồi đến client và/hoặc upstream app.
 
+### Ý nghĩa thực tiễn
+- **Tính mô-đun:** Cho phép quản trị viên bật/tắt từng lớp tuỳ theo nhu cầu.
+- **Khả năng mở rộng:** Có thể bổ sung thêm lớp mới (ví dụ: machine learning) mà không ảnh hưởng pipeline hiện tại.
+- **Giảm false positive:** Shadow mode và anomaly scoring giúp tinh chỉnh ngưỡng trước khi áp dụng chặn thực tế.
+- **Khả năng tích hợp:** Log và sự kiện có thể đưa vào SIEM/ELK để phân tích tập trung.
+
 ---
 
 ## Cơ chế chặn và mô hình ngưỡng của CRSV4
@@ -112,16 +118,80 @@ CRSV4 được thiết kế theo mô hình pipeline nhiều lớp:
 - Khi request vi phạm một luật, CRSV4 cộng thêm số điểm tương ứng.
 - Tổng điểm được so sánh với ngưỡng đã cấu hình để quyết định hành động.
 
-### Ví dụ cộng điểm
-- SQL Injection dấu hiệu mạnh: +4 điểm.
-- XSS cơ bản: +3 điểm.
-- Tham số quá dài bất thường: +2 điểm.
-- Tần suất request vượt ngưỡng: +2 điểm.
-- Header thiếu hoặc sai (ví dụ CSRF token): +3 điểm.
+| Loại vi phạm            | Điểm cộng | Hành động khi vượt ngưỡng |
+|--------------------------|-----------|---------------------------|
+| SQL Injection            | +4        | Block nếu tổng ≥ 8        |
+| XSS                      | +3        | Block nếu tổng ≥ 8        |
+| Tham số dài bất thường   | +2        | Challenge nếu tổng 6–7    |
+| Rate-limit vượt ngưỡng   | +2        | Block nếu tổng ≥ 8        |
+| CSRF thiếu token         | +3        | Block nếu tổng ≥ 8        |
 
 ### Ngưỡng ra quyết định
 - **Cảnh báo:** Tổng điểm ≥ 5 → ghi log/cảnh báo.
 - **Thử thách:** Tổng điểm 6–7 → yêu cầu CAPTCHA hoặc token mới.
 - **Chặn:** Tổng điểm ≥ 8 → chặn request ngay.
+Bạn muốn tôi chỉnh lại đoạn bạn viết thành một README.md rõ ràng, có format chuẩn Markdown, dễ đọc. Đây là phiên bản đã được biên tập lại:
 
+
+### Ví dụ minh hoạ cơ chế tích điểm và chặn của CRSV4
+
+Để giúp mọi người dễ hình dung, dưới đây là hai request gửi đến endpoint thử nghiệm `vulnerable.php`.  
+CRSV4 sẽ phân tích và cộng điểm theo từng vi phạm, sau đó quyết định hành động dựa trên tổng điểm.
+
+---
+
+## 1. Request hợp lệ
+```bash
+curl -i -G --data-urlencode "cmd=echo EXOLOIT_OK" http://192.168.23.130/vulnerable.php
+```
+
+**Phân tích CRSV4:**
+- Không có ký tự đặc biệt nguy hiểm.  
+- Không có mẫu SQLi, XSS, hay command injection.  
+- Không vượt ngưỡng độ dài tham số.  
+
+**Điểm cộng:** 0  
+
+**Kết quả:**
+```
+HTTP/1.1 200 OK
+EXOLOIT_OK
+```
+
+---
+
+## 2. Request chứa chuỗi nghi ngờ
+```bash
+curl -i -G --data-urlencode "cmd=ls; whoami" http://192.168.23.130/vulnerable.php
+```
+
+**Phân tích CRSV4:**
+- Phát hiện dấu `;` trong tham số → dấu hiệu **Command Injection** → **+4 điểm**.  
+- Chuỗi chứa lệnh hệ thống (`ls`, `whoami`) → mẫu nguy hiểm bổ sung → **+3 điểm**.  
+- Tham số dài hơn bình thường, entropy cao → **+1 điểm** (anomaly).  
+
+**Tổng điểm:** 4 + 3 + 1 = **8**  
+
+**So với ngưỡng:** Tổng điểm ≥ 8 → vượt ngưỡng **Block**  
+
+**Kết quả:**
+```
+HTTP/1.1 493 Forbidden
+```
+
+---
+
+## Bảng tổng hợp ví dụ
+
+| Request                | Vi phạm phát hiện                                                                 | Điểm cộng | Tổng điểm | Hành động       |
+|------------------------|-----------------------------------------------------------------------------------|-----------|-----------|-----------------|
+| `cmd=echo EXOLOIT_OK`  | Không có                                                                          | 0         | 0         | 200 OK          |
+| `cmd=ls; whoami`       | `;` (command injection) +4<br>`ls`/`whoami` (mẫu lệnh hệ thống) +3<br>Entropy cao +1 | 8      | 8         | 493 Forbidden   |
+
+---
+
+## Ý nghĩa minh hoạ
+- Request hợp lệ → **200 OK** (cho phép).  
+- Request nguy hiểm → **493 Forbidden** (bị chặn).  
+- CRSV4 không chỉ dựa vào một dấu hiệu duy nhất, mà cộng dồn điểm từ nhiều lớp (signature, anomaly, behavior) để đưa ra quyết định cuối cùng.
 ---
