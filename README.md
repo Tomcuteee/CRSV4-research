@@ -313,9 +313,9 @@ Trong `/var/www/html/` tạo các file:
   ```
   → Kết quả: `200 OK`
   
-   ```markdown
-   ![Mô tả ảnh](images/ten-anh.png)
-   ```
+
+   ![Chưa đủ điểm để chặn](images/200-.png)
+
 
 
 
@@ -324,11 +324,10 @@ Trong `/var/www/html/` tạo các file:
   
   curl -i -get --data-urlencode "cmd=ls; whoami" http://192.168.29.130/vulnerable.php
   ```
-  → Nếu CRS hoạt động: `403 Forbidden` hoặc `493 Forbidden`
+  → Nếu CRS hoạt động: `403 Forbidden`(Chứng minh rằng CRS đã hoạt động)
 
-   ```markdown
-   ![Mô tả ảnh](images/ten-anh.png)
-   ```
+   ![Đã đủ điểm để chặn](images/403-.png)
+   
 
 ---
 
@@ -343,7 +342,9 @@ Xem log realtime:
 sudo tail -f /var/log/apache2/modsec_audit.log
 ```
 Trong log sẽ có (Request gốc , Rule nào match ,  Điểm anomaly cộng thêm  , Hành động (block/challenge/log) )
-   ```markdown
-   ![Mô tả ảnh](images/ten-anh.png)
-   ```
+  
+   ![Log ghi lại phần 200 ok](images/log-200-ok.png)
+   ![Log ghi lại phần 403 forbiddent](images/LOG-403-1.png)    
+   ![Mô tả ảnh](images/log-403-2.png)
+   ![Mô tả ảnh](images/log-403-3.png)
 ---
