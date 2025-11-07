@@ -172,7 +172,7 @@ Bạn muốn tôi chỉnh lại đoạn bạn viết thành một README.md rõ 
 
 ## Ví dụ 1: Request hợp lệ
 ```bash
-curl -i -get --data-urlencode "cmd=echo EXOLOIT_OK" http://192.168.23.130/vulnerable.php
+curl -i -get --data-urlencode "cmd=echo EXOLOIT_OK" http://192.168.29.130/vulnerable.php
 ```
 **Phân tích CRSV4:**
 - Không có ký tự đặc biệt nguy hiểm.  
@@ -191,7 +191,7 @@ EXOLOIT_OK
 
 ## 2. Request chứa chuỗi nghi ngờ
 ```bash
-curl -i -get --data-urlencode "cmd=ls; whoami" http://192.168.23.130/vulnerable.php
+curl -i -get --data-urlencode "cmd=ls; whoami" http://192.168.29.130/vulnerable.php
 ```
 
 **Phân tích CRSV4:**
@@ -224,18 +224,16 @@ HTTP/1.1 493 Forbidden
 - Request nguy hiểm → **493 Forbidden** (bị chặn).  
 - CRSV4 không chỉ dựa vào một dấu hiệu duy nhất, mà cộng dồn điểm từ nhiều lớp (signature, anomaly, behavior) để đưa ra quyết định cuối cùng.
 ---
-Bạn có thể trình bày lại toàn bộ nội dung dưới dạng **README.md** như sau để rõ ràng, dễ đọc và chuyên nghiệp hơn:
 
-```markdown
-# 🔧 Quy trình setup và thử nghiệm CRS v4
+#  Quy trình setup và thử nghiệm CRS v4
 
 ## 1️⃣ Chuẩn bị 2 máy
 
-- **Máy chủ (Target):** Ubuntu VM – IP `192.168.23.130`  
+- **Máy chủ (Target):** Ubuntu VM – IP `192.168.29.130`  
   - Chạy Apache + ModSecurity + CRS v4  
   - Triển khai các file vulnerable để làm demo tấn công  
 
-- **Máy tấn công (Attacker):** Kali Linux – IP `192.168.23.129`  
+- **Máy tấn công (Attacker):** Kali Linux – IP `192.168.29.129`  
   - Gửi request tấn công bằng `curl` hoặc các công cụ pentest khác  
   - Không cần cài đặt phức tạp, Kali mặc định đã có `curl`  
 
@@ -311,15 +309,26 @@ Trong `/var/www/html/` tạo các file:
 
 - Gửi một request hợp lệ từ Kali:
   ```bash
-  curl -i -get --data-urlencode "cmd=echo OK" http://192.168.23.130/vulnerable.php
+  curl -i -get --data-urlencode "cmd=echo OK" http://192.168.29.130/vulnerable.php
   ```
   → Kết quả: `200 OK`
+  
+   ```markdown
+   ![Mô tả ảnh](images/ten-anh.png)
+   ```
+
+
 
 - Gửi một request tấn công từ Kali:
   ```bash
-  curl -i -get --data-urlencode "cmd=ls; whoami" http://192.168.23.130/vulnerable.php
+  
+  curl -i -get --data-urlencode "cmd=ls; whoami" http://192.168.29.130/vulnerable.php
   ```
   → Nếu CRS hoạt động: `403 Forbidden` hoặc `493 Forbidden`
+
+   ```markdown
+   ![Mô tả ảnh](images/ten-anh.png)
+   ```
 
 ---
 
@@ -333,11 +342,8 @@ Xem log realtime:
 ```bash
 sudo tail -f /var/log/apache2/modsec_audit.log
 ```
-
-Trong log sẽ có:
-- Request gốc  
-- Rule nào match  
-- Điểm anomaly cộng thêm  
-- Hành động (block/challenge/log)  
-
+Trong log sẽ có (Request gốc , Rule nào match ,  Điểm anomaly cộng thêm  , Hành động (block/challenge/log) )
+   ```markdown
+   ![Mô tả ảnh](images/ten-anh.png)
+   ```
 ---
