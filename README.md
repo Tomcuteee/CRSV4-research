@@ -342,8 +342,9 @@ Xem log realtime:
 sudo tail -f /var/log/apache2/modsec_audit.log
 ```
 Trong log sẽ có (Request gốc , Rule nào match ,  Điểm anomaly cộng thêm  , Hành động (block/challenge/log) )
-  
+Đây là phần log ghi lại sau khi dùng lệnh(`curl -i -get --data-urlencode "cmd=echo OK" http://192.168.29.130/vulnerable.php`):
    ![Log ghi lại phần 200 ok](images/log-200-ok.png)
+Đây là phần log ghi lại sau khi dùng lệnh(`curl -i -get --data-urlencode "cmd=ls; whoami" http://192.168.29.130/vulnerable.php`):
    ![Log ghi lại phần 403 forbiddent](images/log-403-1.png)    
    ![Mô tả ảnh](images/log-403-2.png)
    ![Mô tả ảnh](images/log-403-3.png)
