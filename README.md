@@ -1,14 +1,27 @@
 # Bài báo khoa học: Kiến trúc, cơ chế chặn và triển khai CRSV4 bảo vệ hệ thống web trên Apache
 
 ## Tóm tắt
-CRSV4 là một hệ thống phòng vệ ứng dụng web (Web Application Firewall – WAF) giả định, được thiết kế để bảo vệ máy chủ Apache khỏi các mối đe doạ lớp ứng dụng như SQL Injection, XSS, CSRF, brute force và thăm dò lỗ hổng. Công cụ này hoạt động theo cơ chế đa lớp, kết hợp phân tích chữ ký, phát hiện bất thường, kiểm soát hành vi và cơ chế tích điểm để đưa ra quyết định chặn hoặc cho phép request.  
+CRSV4 là một hệ thống phòng vệ ứng dụng web (Web Application Firewall – WAF) giả định, được thiết kế để bảo vệ máy chủ khỏi các mối đe doạ lớp ứng dụng như SQL Injection, XSS, CSRF, brute force và thăm dò lỗ hổng. Công cụ này hoạt động theo cơ chế đa lớp, kết hợp phân tích chữ ký, phát hiện bất thường, kiểm soát hành vi và cơ chế tích điểm để đưa ra quyết định chặn hoặc cho phép request.  
 
 Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình ngưỡng và cách tích điểm, cùng quy trình triển khai, cấu hình, quan trắc và phương pháp kiểm thử an toàn trong môi trường hai máy: một máy Ubuntu chạy Apache/CRSV4 và một máy chuyên tạo lưu lượng kiểm thử. Nội dung tập trung vào phòng vệ, quản trị rủi ro và tối ưu, không bao gồm hướng dẫn tấn công chi tiết.
 
 ---
 
 ## Giới thiệu
-Các hệ thống web hiện đại thường đối diện với tấn công lớp ứng dụng, nơi kẻ tấn công khai thác trực tiếp các điểm yếu trong logic xử lý dữ liệu.  
+1.CRS là gì ? 
+- OWASP CRS là một tập hợp các quy tắc tường lửa, có thể được tải vào ModSecurity hoặc các tường lửa ứng dụng web tương thích. CRS bao gồm nhiều tệp .conf khác nhau, mỗi tệp chứa các chữ ký chung cho một loại tấn công phổ biến, chẳng hạn như SQL Injection (SQLi), Cross Site Scripting (XSS), v.v. Nó sử dụng phương pháp so khớp chuỗi, kiểm tra biểu thức chính quy và trình phân tích cú pháp libinjection SQLi/XSS.
+
+2.CRS hỗ trợ hệ điều hành nào 
+ CRS là tập hợp các file cấu hình thuần túy, không phụ thuộc vào hệ điều hành. Tuy nhiên, vì CRS thường được sử dụng cùng với ModSecurity, nên nó hỗ trợ các hệ điều hành mà ModSecurity có thể chạy, bao gồm:
+
+-  **Linux** (Ubuntu, CentOS, Debian…)
+-  **Windows** (với IIS hoặc Apache)
+-  **MacOS** (thường dùng để phát triển hoặc thử nghiệm)
+ 
+3.Modsecurity là gì ?
+- ModSecurity là Tường lửa ứng dụng web (WAF) mã nguồn mở. Nó có thể được cài đặt dưới dạng một mô-đun bên trong máy chủ web Apache, Nginx hoặc IIS.
+
+4.Các hệ thống web hiện đại thường đối diện với tấn công lớp ứng dụng, nơi kẻ tấn công khai thác trực tiếp các điểm yếu trong logic xử lý dữ liệu.  
 | Loại tấn công              | Mục tiêu chính                         | Hậu quả tiềm ẩn                  |
 |-----------------------------|----------------------------------------|----------------------------------|
 | SQL Injection (SQLi)        | Cơ sở dữ liệu                          | Rò rỉ hoặc thay đổi dữ liệu      |
@@ -142,7 +155,7 @@ CRSV4 được thiết kế theo mô hình pipeline(Chuỗi bước liên tiếp
 |--------------------------|-----------|---------------------------|
 | SQL Injection            | +4        | Block nếu tổng ≥ 8        |
 | XSS                      | +3        | Block nếu tổng ≥ 8        |
-| Tham số dài bất thường   | +2        | Challenge nếu tổng 6–7    |
+| Tham số dài bất thường   | +2        | Cảnh báo nếu tổng 6–7    |
 | Rate-limit vượt ngưỡng   | +2        | Block nếu tổng ≥ 8        |
 | CSRF thiếu token         | +3        | Block nếu tổng ≥ 8        |
 
