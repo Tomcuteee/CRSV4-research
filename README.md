@@ -168,7 +168,6 @@ CRSV4 được thiết kế theo mô hình pipeline(Chuỗi bước liên tiếp
 - **Cảnh báo:** Tổng điểm ≥ 5 → ghi log/cảnh báo.
 - **Thử thách:** Tổng điểm 6–7 → yêu cầu CAPTCHA hoặc token mới.
 - **Chặn:** Tổng điểm ≥ 8 → chặn request ngay.
-Bạn muốn tôi chỉnh lại đoạn bạn viết thành một README.md rõ ràng, có format chuẩn Markdown, dễ đọc. Đây là phiên bản đã được biên tập lại:
 
 ---
 
@@ -207,7 +206,7 @@ EXOLOIT_OK
 
 ---
 
-## 2. Request chứa chuỗi nghi ngờ
+## Ví dụ 2: Request chứa chuỗi nghi ngờ
 ```bash
 curl -i -get --data-urlencode "cmd=ls; whoami" http://192.168.29.130/vulnerable.php
 ```
@@ -245,7 +244,7 @@ HTTP/1.1 493 Forbidden
 
 #  Quy trình setup và thử nghiệm CRS v4
 
-## 1️⃣ Chuẩn bị 2 máy
+## 1️. Chuẩn bị 2 máy
 
 - **Máy chủ (Target):** Ubuntu VM – IP `192.168.29.130`  
   - Chạy Apache + ModSecurity + CRS v4  
@@ -257,7 +256,7 @@ HTTP/1.1 493 Forbidden
 
 ---
 
-## 2️⃣ Setup trên máy Ubuntu (Target)
+## 2️. Setup trên máy Ubuntu (Target)
 
 ### Bước 1: Cài Apache
 ```bash
@@ -313,7 +312,7 @@ Trong `/var/www/html/` tạo các file:
 
 ---
 
-## 3️⃣ Kiểm tra CRS v4 hoạt động
+## 3️. Kiểm tra CRS v4 hoạt động
 
 - Mở file `/etc/modsecurity/modsecurity.conf` và đảm bảo:
   ```
@@ -349,7 +348,7 @@ Trong `/var/www/html/` tạo các file:
 
 ---
 
-## 4️⃣ Xem log để xác nhận CRS chặn
+## 4️. Xem log để xác nhận CRS chặn
 
 ModSecurity ghi log tại:
 - `/var/log/apache2/error.log` (log lỗi chung)  
@@ -444,16 +443,42 @@ SecRule ARGS|REQUEST_URI|QUERY_STRING "@rx (?i)\b(cat|ls|rm|touch|cp|mv|chmod|ch
 ```bash
 sudo systemctl restart apache2
 ```
-## Kiểm thử từ máy Kali
+### Kiểm thử từ máy Kali
 - Gửi lệnh `cmd=` đến máy chủ ubuntu:
   ```bash
   curl -i --get --data-urlencode "cmd=echo OK" http://192.168.29.130/vulnerable.php
   ```
   
-- Kết quả:
-  ![LOG](images/001.png)
+- Kết quả cho thấy:
 
-  
+   ![LOG](images/001.png)
+
 -Log của máy chủ ubuntu hiện:
  ![LOG](images/01.png)
  ![LOG](images/02.png)
+
+##3. Kết luận:
+-Sau khi hoàn tất các bước trên, hệ thống Apache dù cực yếu vẫn được bảo vệ bởi ModSecurity CRS nâng cao. Dù attacker gửi lệnh qua bất kỳ tham số nào, dùng shell chaining, reverse shell hay truy cập file hệ thống, tất cả đều bị chặn ở tầng request với mã 403.
+-Việc thêm file  giúp bạn chặn triệt để các lệnh nguy hiểm qua  và toàn bộ request. Đây là lớp bảo vệ cuối cùng trong hệ thống, đảm bảo rằng dù attacker gửi lệnh gì, hệ thống vẫn chặn đứng ngay từ tầng request.
+
+## Đánh giá và phân tích CRSV4:
+- Chặn hiệu quả SQLi, XSS, CSRF, brute force, command injection.
+- 	Cơ chế tích điểm và ngưỡng giúp giảm false positive.
+- 	Ghi log đầy đủ, hỗ trợ truy vết và giám sát.
+- 	Hoạt động ổn định, không gây gián đoạn dịch vụ.
+- 	Dễ mở rộng , cải thiện.
+
+---
+
+##  Kết luận
+
+- CRSV4 là giải pháp WAF hiệu quả, phù hợp cả môi trường thử nghiệm và triển khai thực tế.  
+- Kiến trúc đa lớp và cơ chế tích điểm giúp bảo vệ toàn diện hệ thống web khỏi các mối đe doạ lớp ứng dụng.  
+- Phù hợp với: **Quản trị viên hệ thống**: **Nhóm DevSecOps**,**Nhà nghiên cứu an ninh mạng**,**Doanh nghiệp vừa và nhỏ**,**Nhà phát triển web**
+---
+
+
+
+
+
+  
