@@ -133,9 +133,9 @@ CRSV4 được thiết kế theo mô hình pipeline nhiều lớp:
 Bạn muốn tôi chỉnh lại đoạn bạn viết thành một README.md rõ ràng, có format chuẩn Markdown, dễ đọc. Đây là phiên bản đã được biên tập lại:
 
 
-### Ví dụ minh hoạ cơ chế tích điểm và chặn của CRSV4
+### Ví dụ minh hoạ cơ chế tích điểm và chặn của CRSV4 :
 
-Để giúp mọi người dễ hình dung, dưới đây là hai request gửi đến endpoint thử nghiệm `vulnerable.php`.  
+Để giúp mọi người dễ hình dung, dưới đây là hai request gửi đến endpoint thử nghiệm [`vulnerable.php`](./vulnerable.php) ở trên Apache.
 CRSV4 sẽ phân tích và cộng điểm theo từng vi phạm, sau đó quyết định hành động dựa trên tổng điểm.
 
 ---
