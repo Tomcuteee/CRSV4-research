@@ -20,7 +20,8 @@ Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình 
  
 3.Modsecurity là gì ?
 - ModSecurity là Tường lửa ứng dụng web (WAF) mã nguồn mở. Nó có thể được cài đặt dưới dạng một mô-đun bên trong máy chủ web Apache, Nginx hoặc IIS.
-4.Sự khác biệt giữa CRS và Modsecurity là gì ?
+
+4.Sự khác biệt giữa CRS và Modsecurity:
 - ModSecurity là một công cụ tường lửa có thể kiểm tra lưu lượng truy cập trên máy chủ của bạn. Nó ghi lại và chặn các yêu cầu. Tuy nhiên, công cụ này sẽ không làm được gì nếu không có một chính sách nhất định.
 - CRS cung cấp một chính sách cho phép kiểm tra các yêu cầu đến ứng dụng web của bạn để phát hiện các cuộc tấn công khác nhau và chặn lưu lượng truy cập độc hại.
 
