@@ -4,12 +4,12 @@
 CRSV4 là một hệ thống phòng vệ ứng dụng web (Web Application Firewall – WAF) giả định, được thiết kế để bảo vệ máy chủ khỏi các mối đe doạ lớp ứng dụng như SQL Injection, XSS, CSRF, brute force và thăm dò lỗ hổng. Công cụ này hoạt động theo cơ chế đa lớp, kết hợp phân tích chữ ký, phát hiện bất thường, kiểm soát hành vi và cơ chế tích điểm để đưa ra quyết định chặn hoặc cho phép request.  
 
 Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình ngưỡng và cách tích điểm, cùng quy trình triển khai, cấu hình, quan trắc và phương pháp kiểm thử an toàn trong môi trường hai máy: một máy Ubuntu chạy Apache/CRSV4 và một máy chuyên tạo lưu lượng kiểm thử. Nội dung tập trung vào phòng vệ, quản trị rủi ro và tối ưu, không bao gồm hướng dẫn tấn công chi tiết.
-
+ 
 ---
 
 ## Giới thiệu
 1.CRS là gì ? 
-- OWASP CRS là một tập hợp các quy tắc tường lửa, có thể được tải vào ModSecurity hoặc các tường lửa ứng dụng web tương thích. CRS bao gồm nhiều tệp .conf khác nhau, mỗi tệp chứa các chữ ký chung cho một loại tấn công phổ biến, chẳng hạn như SQL Injection (SQLi), Cross Site Scripting (XSS), v.v. Nó sử dụng phương pháp so khớp chuỗi, kiểm tra biểu thức chính quy và trình phân tích cú pháp libinjection SQLi/XSS.
+- OWASP CRS là một tập hợp các quy tắc tường lửa, có thể được tải vào ModSecurity hoặc các tường lửa ứng dụng web tương thích. CRS bao gồ+m nhiều tệp .conf khác nhau, mỗi tệp chứa các chữ ký chung cho một loại tấn công phổ biến, chẳng hạn như SQL Injection (SQLi), Cross Site Scripting (XSS), v.v. Nó sử dụng phương pháp so khớp chuỗi, kiểm tra biểu thức chính quy và trình phân tích cú pháp libinjection SQLi/XSS.
 
 2.CRS hỗ trợ hệ điều hành nào 
  CRS là tập hợp các file cấu hình thuần túy, không phụ thuộc vào hệ điều hành. Tuy nhiên, vì CRS thường được sử dụng cùng với ModSecurity, nên nó hỗ trợ các hệ điều hành mà ModSecurity có thể chạy, bao gồm:
@@ -25,7 +25,7 @@ Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình 
 - ModSecurity là một công cụ tường lửa có thể kiểm tra lưu lượng truy cập trên máy chủ của bạn. Nó ghi lại và chặn các yêu cầu. Tuy nhiên, công cụ này sẽ không làm được gì nếu không có một chính sách nhất định.
 - CRS cung cấp một chính sách cho phép kiểm tra các yêu cầu đến ứng dụng web của bạn để phát hiện các cuộc tấn công khác nhau và chặn lưu lượng truy cập độc hại.
 
-5.Các hệ thống web hiện đại thường đối diện với tấn công lớp ứng dụng, nơi kẻ tấn công khai thác trực tiếp các điểm yếu trong logic xử lý dữ liệu.
+5. Phân tích các loại hình CRS có thể chặn:
 
   
 | Loại tấn công              | Mục tiêu chính                         | Hậu quả tiềm ẩn                  |
@@ -377,15 +377,15 @@ Trong log sẽ có (Request gốc , Rule nào match ,  Điểm anomaly cộng th
 > Nếu không có kiểm soát đầu vào và không có lớp bảo vệ như ModSecurity, attacker có thể đọc file, chiếm quyền, mở reverse shell, hoặc phá hủy toàn bộ hệ thống chỉ bằng một dòng lệnh.
 
 
-## **Giải pháp: Tự thêm rule nâng cao vào CRS**
+## **Giải pháp: Thêm rule nâng cao vào CRS**
 
-### Tạo file rule tùy chỉnh:
+#### Tạo file rule tùy chỉnh:
 
 ```bash
 sudo nano /etc/modsecurity/coreruleset/rules/REQUEST-999-CRITICAL-CMD-BLOCK.conf
 ```
 
-###  Nội dung rule tổng hợp:
+####  Nội dung rule tổng hợp:
 
 ```apache
 # 1. Chặn các lệnh hệ điều hành cơ bản qua tham số cmd
@@ -429,11 +429,11 @@ SecRule ARGS|REQUEST_URI|QUERY_STRING "@rx (?i)\b(/etc/passwd|/etc/shadow|/root/
     severity:CRITICAL,\
     log"
 ```
-### Restart apache:
+#### Restart apache:
 ```bash
 sudo systemctl restart apache2
 ```
-### Kiểm thử từ máy Kali:
+#### Kiểm thử từ máy Kali:
 - Gửi lệnh `cmd=` đến máy chủ ubuntu:
   ```bash
   curl -i --get --data-urlencode "cmd=echo OK" http://192.168.29.130/vulnerable.php
@@ -447,7 +447,7 @@ sudo systemctl restart apache2
  ![LOG](images/01.png)
  ![LOG](images/02.png)
 
-## 3. Kết luận:
+### 3. Kết luận:
 -Sau khi hoàn tất các bước trên, hệ thống Apache dù cực yếu vẫn được bảo vệ bởi ModSecurity CRS nâng cao. Dù attacker gửi lệnh qua bất kỳ tham số nào, dùng shell chaining, reverse shell hay truy cập file hệ thống, tất cả đều bị chặn ở tầng request với mã 403.
 -Việc thêm file  giúp bạn chặn triệt để các lệnh nguy hiểm qua  và toàn bộ request. Đây là lớp bảo vệ cuối cùng trong hệ thống, đảm bảo rằng dù attacker gửi lệnh gì, hệ thống vẫn chặn đứng ngay từ tầng request.
 
