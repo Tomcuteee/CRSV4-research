@@ -1,9 +1,9 @@
 # Bài báo khoa học: Kiến trúc, cơ chế chặn và triển khai CRSV4 bảo vệ hệ thống web
 
 ## Tóm tắt
-CRSV4 là một hệ thống phòng vệ ứng dụng web (Web Application Firewall – WAF) giả định, được thiết kế để bảo vệ máy chủ khỏi các mối đe doạ lớp ứng dụng như SQL Injection, XSS, CSRF, brute force và thăm dò lỗ hổng. Công cụ này hoạt động theo cơ chế đa lớp, kết hợp phân tích chữ ký, phát hiện bất thường, kiểm soát hành vi và cơ chế tích điểm để đưa ra quyết định chặn hoặc cho phép request.  
+CRSV4 là một hệ thống phòng vệ ứng dụng web (Web Application Firewall – WAF) giả định, có vai trò bảo vệ hệ thống khỏi các cuộc tấn công độc hại và thăm dò lỗ hổng.
 
-Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình ngưỡng và cách tích điểm, cùng quy trình triển khai, cấu hình, quan trắc và phương pháp kiểm thử an toàn trong môi trường hai máy: một máy Ubuntu chạy Apache/CRSV4 và một máy chuyên tạo lưu lượng kiểm thử. Nội dung tập trung vào phòng vệ, quản trị rủi ro và tối ưu, không bao gồm hướng dẫn tấn công chi tiết.
+Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình ngưỡng và cách tích điểm, cùng quy trình triển khai, cấu hình, quan trắc và phương pháp kiểm thử an toàn trong môi trường hai máy: một máy Ubuntu chạy Apache/CRSV4 và một máy Linux chạy các lệnh để kiểm thử. Nội dung tập trung vào phòng vệ, quản trị rủi ro và tối ưu, không bao gồm hướng dẫn tấn công chi tiết.
  
 ---
 
@@ -11,7 +11,7 @@ Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình 
 1.CRS là gì ? 
 - OWASP CRS là một tập hợp các quy tắc tường lửa, có thể được tải vào ModSecurity hoặc các tường lửa ứng dụng web tương thích. CRS bao gồ+m nhiều tệp .conf khác nhau, mỗi tệp chứa các chữ ký chung cho một loại tấn công phổ biến, chẳng hạn như SQL Injection (SQLi), Cross Site Scripting (XSS), v.v. Nó sử dụng phương pháp so khớp chuỗi, kiểm tra biểu thức chính quy và trình phân tích cú pháp libinjection SQLi/XSS.
 
-2.CRS hỗ trợ hệ điều hành nào 
+2.CRS hỗ trợ hệ điều hành nào ?
  CRS là tập hợp các file cấu hình thuần túy, không phụ thuộc vào hệ điều hành. Tuy nhiên, vì CRS thường được sử dụng cùng với ModSecurity, nên nó hỗ trợ các hệ điều hành mà ModSecurity có thể chạy, bao gồm:
 
 -  **Linux** (Ubuntu, CentOS, Debian…)
