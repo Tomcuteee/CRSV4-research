@@ -9,7 +9,7 @@ Bài báo mô tả kiến trúc, cơ chế chặn theo nhiều lớp, mô hình 
 
 ## Giới thiệu
 1.CRS là gì ? 
-- OWASP CRS là một tập hợp các quy tắc tường lửa, có thể được tải vào ModSecurity hoặc các tường lửa ứng dụng web tương thích. CRS bao gồ+m nhiều tệp .conf khác nhau, mỗi tệp chứa các chữ ký chung cho một loại tấn công phổ biến, chẳng hạn như SQL Injection (SQLi), Cross Site Scripting (XSS), v.v. Nó sử dụng phương pháp so khớp chuỗi, kiểm tra biểu thức chính quy và trình phân tích cú pháp libinjection SQLi/XSS.
+- OWASP CRS là một tập hợp các quy tắc tường lửa, có thể được tải vào ModSecurity hoặc các tường lửa ứng dụng web tương thích. CRS bao gồm nhiều tệp .conf khác nhau, mỗi tệp chứa các chữ ký chung cho một loại tấn công phổ biến, chẳng hạn như SQL Injection (SQLi), Cross Site Scripting (XSS), v.v. Nó sử dụng phương pháp so khớp chuỗi, kiểm tra biểu thức chính quy và trình phân tích cú pháp libinjection SQLi/XSS.
 
 2.CRS hỗ trợ hệ điều hành nào ?
  CRS là tập hợp các file cấu hình thuần túy, không phụ thuộc vào hệ điều hành. Tuy nhiên, vì CRS thường được sử dụng cùng với ModSecurity, nên nó hỗ trợ các hệ điều hành mà ModSecurity có thể chạy, bao gồm:
